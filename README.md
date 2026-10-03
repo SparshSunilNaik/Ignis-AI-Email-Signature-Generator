@@ -12,7 +12,7 @@ No backend, database, authentication, API keys, or build step. Everything runs i
 - Copies raw HTML source for technical email clients
 - Exports a high-resolution PNG of the signature only
 - Exports a compact PDF (with Print / Save as PDF fallback)
-- Resets to Sparsh’s default Ignis profile values
+- Resets to empty personal fields with the company ABN and website defaults
 
 ## 2. How to run locally
 
@@ -38,41 +38,32 @@ Then open:
 http://localhost:8080/
 ```
 
-## 3. How to set `HOSTED_LOGO_URL`
+## 3. Hosted logo URL
 
-Open `script.js`. Near the top you will find:
-
-```js
-const HOSTED_LOGO_URL = "";
-```
-
-After you host `image.png` (for example on GitHub Pages), set:
+`script.js` sets:
 
 ```js
-const HOSTED_LOGO_URL = "https://YOUR_USERNAME.github.io/Ignis-AI-Email-Signature-Generator/image.png";
+const HOSTED_LOGO_URL =
+  "https://sparshsunilnaik.github.io/Ignis-AI-Email-Signature-Generator/image.png";
 ```
 
-Use your real Pages URL. Keep the constant easy to find — do not bury it.
+Live preview and copied HTML signatures use this absolute URL so email clients can load the Ignis logo.
+
+PNG/PDF export uses the local `./image.png` asset for reliable canvas capture.
+
+If you move hosting, update `HOSTED_LOGO_URL` near the top of `script.js`.
 
 ## 4. Why the logo must be hosted for real email signatures
 
-The live preview can load `./image.png` from this project.
-
-Copied HTML signatures cannot reliably reference a local file on a teammate’s machine. When a recipient opens the email, their client needs an absolute `https://…` image URL.
-
-Until `HOSTED_LOGO_URL` is set:
-
-- Preview still works with the local logo
-- A warning appears in the UI
-- Copied HTML will still point at `./image.png`, which will **not** display for recipients
+Copied HTML signatures cannot reliably reference a local file on a teammate’s machine. Recipients need an absolute `https://…` image URL.
 
 Do **not** paste a huge base64 logo into the copied HTML.
 
 ## 5. How to deploy with GitHub Pages
 
-Repository (example): [Ignis-AI-Email-Signature-Generator](https://github.com/SparshSunilNaik/Ignis-AI-Email-Signature-Generator)
+Repository: [Ignis-AI-Email-Signature-Generator](https://github.com/SparshSunilNaik/Ignis-AI-Email-Signature-Generator)
 
-1. Push these files to the repository root (or `/docs`):
+1. Push these files to the repository root:
    - `index.html`
    - `styles.css`
    - `script.js`
@@ -80,32 +71,27 @@ Repository (example): [Ignis-AI-Email-Signature-Generator](https://github.com/Sp
    - `README.md`
 2. On GitHub: **Settings → Pages**
 3. Source: **Deploy from a branch**
-4. Branch: `main` (or `master`), folder: `/ (root)` — or `/docs` if you placed files there
+4. Branch: `main`, folder: `/ (root)`
 5. Save and wait for the site to publish
-6. Site URL will look like:
+6. Site URL:
 
 ```text
 https://sparshsunilnaik.github.io/Ignis-AI-Email-Signature-Generator/
-```
-
-7. Set `HOSTED_LOGO_URL` to:
-
-```text
-https://sparshsunilnaik.github.io/Ignis-AI-Email-Signature-Generator/image.png
 ```
 
 All asset paths are relative (`./styles.css`, `./script.js`, `./image.png`) so the app works from a project subdirectory.
 
 ## 6. How to create a signature
 
-1. Enter **Full name**, **Role / position**, and **Ignis email** (required).
-2. Optionally add qualifications, phone, ABN, website label, and location.
-3. Choose logo size: Small / Standard / Large.
-4. Use the optional-line toggles when those fields have values.
-5. Review the live preview on the right.
-6. Click **Copy signature**.
+1. Enter **Full name**, **Role / position**, and **Ignis email**.
+2. Optionally add qualifications, phone, and location.
+3. Confirm the company ABN (`13 131 623 927` by default) and website (`ignisai.au`).
+4. Choose logo size: Small / Standard / Large.
+5. Use the optional-line toggles when those fields have values.
+6. Review the live preview on the right.
+7. Click **Copy signature**.
 
-Blank optional fields are omitted entirely — no empty rows.
+Blank personal fields are omitted entirely — no empty rows. Placeholders never appear in the generated signature.
 
 ## 7. How to paste into Gmail
 
@@ -115,8 +101,6 @@ Blank optional fields are omitted entirely — no empty rows.
 4. Paste into the signature editor (`Cmd/Ctrl + V`).
 5. Save changes at the bottom of the page.
 6. Compose a test email to yourself and confirm the logo + links.
-
-If the logo is missing in the sent email, `HOSTED_LOGO_URL` is empty or incorrect.
 
 ### Outlook / Apple Mail
 
@@ -129,7 +113,7 @@ Same idea: paste the copied signature into the client’s signature settings. Pr
 3. A 3× resolution PNG downloads, named like:
 
 ```text
-Ignis_Sparsh_Sunil_Naik_EmailSignature.png
+Ignis_FirstName_LastName_EmailSignature.png
 ```
 
 Only the signature is exported — not the generator UI.
@@ -175,5 +159,4 @@ All processing is client-side. Form data never leaves the browser. No analytics 
 - Some clients strip or rewrite HTML; keep the signature table simple.
 - Images may be blocked until the recipient allows them.
 - Dark-mode clients may invert colours unexpectedly.
-- Local `./image.png` paths will not work for recipients — always set `HOSTED_LOGO_URL` for production.
 - Gmail may slightly adjust spacing; that is normal.

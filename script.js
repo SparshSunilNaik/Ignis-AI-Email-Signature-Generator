@@ -4,21 +4,16 @@
  */
 
 /* ============================================================
- * HOSTED LOGO URL — edit this before production email use
- * ============================================================
- * Copied HTML email signatures cannot reliably use local files.
- * Host image.png (or a CDN copy) and paste the absolute HTTPS URL here.
- *
- * Example:
- *   const HOSTED_LOGO_URL = "https://sparshsunilnaik.github.io/Ignis-AI-Email-Signature-Generator/image.png";
- *
- * Leave empty ("") to use ./image.png in the live preview only.
+ * HOSTED LOGO URL — absolute HTTPS URL for email clients
  * ============================================================ */
-const HOSTED_LOGO_URL = "";
+const HOSTED_LOGO_URL =
+  "https://sparshsunilnaik.github.io/Ignis-AI-Email-Signature-Generator/image.png";
 
 const LOCAL_LOGO_PATH = "./image.png";
 const WEBSITE_HREF = "https://ignisai.au/";
 const COMPANY_NAME = "Ignis AI";
+const COMPANY_WEBSITE_LABEL = "ignisai.au";
+const DEFAULT_ABN = "13 131 623 927";
 
 const LOGO_WIDTHS = {
   small: 90,
@@ -27,19 +22,15 @@ const LOGO_WIDTHS = {
 };
 
 const DEFAULTS = {
-  fullName: "Sparsh Sunil Naik",
-  role: "AI Engineer",
-  email: "sparsh@ignisai.au",
+  fullName: "",
+  role: "",
+  email: "",
   qualifications: "",
-  phone: "+91 9448863888",
-  abn: "",
-  website: "ignisai.au",
+  phone: "",
+  abn: DEFAULT_ABN,
+  website: COMPANY_WEBSITE_LABEL,
   location: "",
   logoSize: "standard",
-  showPhone: true,
-  showQualifications: true,
-  showAbn: true,
-  showLocation: true,
 };
 
 const els = {
@@ -47,7 +38,6 @@ const els = {
   preview: document.getElementById("signature-preview"),
   copyMount: document.getElementById("copy-mount"),
   status: document.getElementById("status"),
-  logoWarning: document.getElementById("logo-host-warning"),
   fullName: document.getElementById("fullName"),
   role: document.getElementById("role"),
   email: document.getElementById("email"),
@@ -85,22 +75,36 @@ function getLogoSize() {
   return selected ? selected.value : "standard";
 }
 
+function formatAbnDisplay(abn) {
+  const trimmed = trimValue(abn);
+  if (!trimmed) return "";
+  const withoutPrefix = trimmed.replace(/^ABN\s+/i, "").trim();
+  if (!withoutPrefix) return "";
+  return "ABN " + withoutPrefix;
+}
+
 function getFormState() {
+  const fullName = trimValue(els.fullName.value);
+  const role = trimValue(els.role.value);
+  const email = trimValue(els.email.value);
   const qualifications = trimValue(els.qualifications.value);
   const phone = trimValue(els.phone.value);
   const abn = trimValue(els.abn.value);
   const location = trimValue(els.location.value);
 
   return {
-    fullName: trimValue(els.fullName.value) || DEFAULTS.fullName,
-    role: trimValue(els.role.value) || DEFAULTS.role,
-    email: trimValue(els.email.value) || DEFAULTS.email,
-    qualifications,
-    phone,
-    abn,
-    website: trimValue(els.website.value) || DEFAULTS.website,
-    location,
+    fullName: fullName,
+    role: role,
+    email: email,
+    qualifications: qualifications,
+    phone: phone,
+    abn: abn,
+    website: trimValue(els.website.value) || COMPANY_WEBSITE_LABEL,
+    location: location,
     logoSize: getLogoSize(),
+    showName: Boolean(fullName),
+    showRole: Boolean(role),
+    showEmail: Boolean(email),
     showPhone: els.showPhone.checked && Boolean(phone),
     showQualifications: els.showQualifications.checked && Boolean(qualifications),
     showAbn: els.showAbn.checked && Boolean(abn),
@@ -108,9 +112,7 @@ function getFormState() {
   };
 }
 
-function getLogoSrc(forClipboard) {
-  // Production clipboard HTML prefers the hosted absolute URL.
-  // Live preview falls back to the local asset when HOSTED_LOGO_URL is empty.
+function getLogoSrc() {
   if (HOSTED_LOGO_URL) {
     return HOSTED_LOGO_URL;
   }
@@ -129,17 +131,19 @@ function telHref(phone) {
 
 function buildPlainText(state) {
   const lines = [];
-  lines.push(state.fullName);
-  lines.push(state.role + ", " + COMPANY_NAME);
+  if (state.showName) lines.push(state.fullName);
+  if (state.showRole) lines.push(state.role + ", " + COMPANY_NAME);
   if (state.showQualifications) lines.push(state.qualifications);
-  lines.push("");
-  lines.push(state.email);
-  if (state.showPhone) lines.push(state.phone);
-  lines.push(WEBSITE_HREF.replace(/\/$/, ""));
+  if (state.showEmail || state.showPhone || state.website) {
+    if (lines.length) lines.push("");
+    if (state.showEmail) lines.push(state.email);
+    if (state.showPhone) lines.push(state.phone);
+    lines.push(WEBSITE_HREF.replace(/\/$/, ""));
+  }
   if (state.showLocation || state.showAbn) {
     lines.push("");
     if (state.showLocation) lines.push(state.location);
-    if (state.showAbn) lines.push(state.abn);
+    if (state.showAbn) lines.push(formatAbnDisplay(state.abn));
   }
   return lines.join("\n");
 }
@@ -151,48 +155,61 @@ function buildPlainText(state) {
  */
 function buildSignatureHtml(state, options) {
   options = options || {};
-  const forClipboard = Boolean(options.forClipboard);
   const forExport = Boolean(options.forExport);
 
   const logoWidth = LOGO_WIDTHS[state.logoSize] || LOGO_WIDTHS.standard;
   const logoHeight = logoHeightForWidth(logoWidth);
-  const logoSrc = forExport ? LOCAL_LOGO_PATH : getLogoSrc(forClipboard);
+  // Preview + copied HTML use the hosted logo; PNG/PDF export uses the local asset.
+  const logoSrc = forExport ? LOCAL_LOGO_PATH : getLogoSrc();
 
-  const name = escapeHtml(state.fullName);
-  const role = escapeHtml(state.role);
-  const email = escapeHtml(state.email);
-  const websiteLabel = escapeHtml(state.website.replace(/^https?:\/\//i, "").replace(/\/$/, ""));
+  const websiteLabel = escapeHtml(
+    state.website.replace(/^https?:\/\//i, "").replace(/\/$/, "")
+  );
 
   let contactRows = "";
+  let wroteIdentity = false;
 
-  contactRows +=
-    '<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:600; line-height:1.35; color:#1C1210; margin:0 0 2px 0;">' +
-    name +
-    "</div>";
+  if (state.showName) {
+    contactRows +=
+      '<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:600; line-height:1.35; color:#1C1210; margin:0 0 2px 0;">' +
+      escapeHtml(state.fullName) +
+      "</div>";
+    wroteIdentity = true;
+  }
 
-  contactRows +=
-    '<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:400; line-height:1.35; color:#514542; margin:0 0 2px 0;">' +
-    role +
-    ", " +
-    escapeHtml(COMPANY_NAME) +
-    "</div>";
+  if (state.showRole) {
+    contactRows +=
+      '<div style="font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:400; line-height:1.35; color:#514542; margin:0 0 2px 0;">' +
+      escapeHtml(state.role) +
+      ", " +
+      escapeHtml(COMPANY_NAME) +
+      "</div>";
+    wroteIdentity = true;
+  }
 
   if (state.showQualifications) {
     contactRows +=
       '<div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:400; line-height:1.35; color:#7A6F6D; margin:0 0 2px 0;">' +
       escapeHtml(state.qualifications) +
       "</div>";
+    wroteIdentity = true;
   }
 
-  contactRows += '<div style="height:10px; line-height:10px; font-size:10px;">&nbsp;</div>';
+  if (wroteIdentity) {
+    contactRows +=
+      '<div style="height:10px; line-height:10px; font-size:10px;">&nbsp;</div>';
+  }
 
-  contactRows +=
-    '<div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.45; margin:0 0 2px 0;">' +
-    '<a href="mailto:' +
-    email +
-    '" style="color:#C93227; text-decoration:none; font-family:Arial, Helvetica, sans-serif;">' +
-    email +
-    "</a></div>";
+  if (state.showEmail) {
+    const email = escapeHtml(state.email);
+    contactRows +=
+      '<div style="font-family:Arial, Helvetica, sans-serif; font-size:12px; line-height:1.45; margin:0 0 2px 0;">' +
+      '<a href="mailto:' +
+      email +
+      '" style="color:#C93227; text-decoration:none; font-family:Arial, Helvetica, sans-serif;">' +
+      email +
+      "</a></div>";
+  }
 
   if (state.showPhone) {
     contactRows +=
@@ -213,7 +230,8 @@ function buildSignatureHtml(state, options) {
     "</a></div>";
 
   if (state.showLocation || state.showAbn) {
-    contactRows += '<div style="height:10px; line-height:10px; font-size:10px;">&nbsp;</div>';
+    contactRows +=
+      '<div style="height:10px; line-height:10px; font-size:10px;">&nbsp;</div>';
   }
 
   if (state.showLocation) {
@@ -226,7 +244,7 @@ function buildSignatureHtml(state, options) {
   if (state.showAbn) {
     contactRows +=
       '<div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; font-weight:400; line-height:1.35; color:#7A6F6D; margin:0;">' +
-      escapeHtml(state.abn) +
+      escapeHtml(formatAbnDisplay(state.abn)) +
       "</div>";
   }
 
@@ -293,14 +311,6 @@ function renderPreview() {
   updateToggleStates();
   const state = getFormState();
   els.preview.innerHTML = buildSignatureHtml(state, { forClipboard: false });
-}
-
-function syncLogoWarning() {
-  if (!HOSTED_LOGO_URL) {
-    els.logoWarning.hidden = false;
-  } else {
-    els.logoWarning.hidden = true;
-  }
 }
 
 async function copyWithClipboardItem(html, plain) {
@@ -631,7 +641,6 @@ function bindEvents() {
 }
 
 function init() {
-  syncLogoWarning();
   bindEvents();
   renderPreview();
 }
