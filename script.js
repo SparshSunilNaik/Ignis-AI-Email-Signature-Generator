@@ -33,29 +33,74 @@ const DEFAULTS = {
   logoSize: "standard",
 };
 
-const els = {
-  form: document.getElementById("signature-form"),
-  preview: document.getElementById("signature-preview"),
-  copyMount: document.getElementById("copy-mount"),
-  status: document.getElementById("status"),
-  fullName: document.getElementById("fullName"),
-  role: document.getElementById("role"),
-  email: document.getElementById("email"),
-  qualifications: document.getElementById("qualifications"),
-  phone: document.getElementById("phone"),
-  abn: document.getElementById("abn"),
-  website: document.getElementById("website"),
-  location: document.getElementById("location"),
-  showPhone: document.getElementById("showPhone"),
-  showQualifications: document.getElementById("showQualifications"),
-  showAbn: document.getElementById("showAbn"),
-  showLocation: document.getElementById("showLocation"),
-  btnCopy: document.getElementById("btn-copy"),
-  btnCopyHtml: document.getElementById("btn-copy-html"),
-  btnExportPng: document.getElementById("btn-export-png"),
-  btnExportPdf: document.getElementById("btn-export-pdf"),
-  btnReset: document.getElementById("btn-reset"),
-};
+const REQUIRED_ELS = [
+  "form",
+  "preview",
+  "copyMount",
+  "status",
+  "fullName",
+  "role",
+  "email",
+  "qualifications",
+  "phone",
+  "abn",
+  "website",
+  "location",
+  "showPhone",
+  "showQualifications",
+  "showAbn",
+  "showLocation",
+  "btnCopy",
+  "btnCopyHtml",
+  "btnExportPng",
+  "btnExportPdf",
+  "btnReset",
+];
+
+/** @type {Record<string, HTMLElement|null>} */
+var els = {};
+var userHasInteracted = false;
+var autofillGuardDone = false;
+
+function resolveElements() {
+  els = {
+    form: document.getElementById("signature-form"),
+    preview: document.getElementById("signature-preview"),
+    copyMount: document.getElementById("copy-mount"),
+    status: document.getElementById("status"),
+    fullName: document.getElementById("fullName"),
+    role: document.getElementById("role"),
+    email: document.getElementById("email"),
+    qualifications: document.getElementById("qualifications"),
+    phone: document.getElementById("phone"),
+    abn: document.getElementById("abn"),
+    website: document.getElementById("website"),
+    location: document.getElementById("location"),
+    showPhone: document.getElementById("showPhone"),
+    showQualifications: document.getElementById("showQualifications"),
+    showAbn: document.getElementById("showAbn"),
+    showLocation: document.getElementById("showLocation"),
+    btnCopy: document.getElementById("btn-copy"),
+    btnCopyHtml: document.getElementById("btn-copy-html"),
+    btnExportPng: document.getElementById("btn-export-png"),
+    btnExportPdf: document.getElementById("btn-export-pdf"),
+    btnReset: document.getElementById("btn-reset"),
+  };
+
+  var missing = [];
+  REQUIRED_ELS.forEach(function (key) {
+    if (!els[key]) missing.push(key);
+  });
+
+  if (missing.length) {
+    console.error(
+      "Ignis signature generator: missing required DOM elements:",
+      missing.join(", ")
+    );
+    return false;
+  }
+  return true;
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -282,6 +327,8 @@ function updateToggleStates() {
   ];
 
   pairs.forEach(function (pair) {
+    if (!pair.input || !pair.toggle) return;
+
     const hasValue = Boolean(trimValue(pair.input.value));
     const label = pair.toggle.closest(".toggle");
     const wasDisabled = pair.toggle.disabled;
@@ -301,6 +348,7 @@ function updateToggleStates() {
 }
 
 function setStatus(message, type) {
+  if (!els.status) return;
   els.status.textContent = message || "";
   els.status.classList.remove("is-success", "is-error");
   if (type === "success") els.status.classList.add("is-success");
@@ -308,9 +356,17 @@ function setStatus(message, type) {
 }
 
 function renderPreview() {
-  updateToggleStates();
-  const state = getFormState();
-  els.preview.innerHTML = buildSignatureHtml(state, { forClipboard: false });
+  if (!els.preview) {
+    console.error("Ignis signature generator: preview element missing");
+    return;
+  }
+  try {
+    updateToggleStates();
+    const state = getFormState();
+    els.preview.innerHTML = buildSignatureHtml(state, { forClipboard: false });
+  } catch (err) {
+    console.error("Ignis signature generator: failed to render preview", err);
+  }
 }
 
 async function copyWithClipboardItem(html, plain) {
@@ -597,7 +653,7 @@ function openPrintFallback() {
   );
 }
 
-function resetForm() {
+function applyDefaultState() {
   els.fullName.value = DEFAULTS.fullName;
   els.role.value = DEFAULTS.role;
   els.email.value = DEFAULTS.email;
@@ -614,25 +670,87 @@ function resetForm() {
   els.showQualifications.checked = true;
   els.showAbn.checked = true;
   els.showLocation.checked = true;
+}
 
+function resetForm() {
+  userHasInteracted = true;
+  applyDefaultState();
   renderPreview();
   setStatus("Form reset to defaults.", "success");
 }
 
+function markUserInteraction() {
+  userHasInteracted = true;
+}
+
+/**
+ * Prevent aggressive browser profile autofill from restoring old personal
+ * contact details into this generator. Readonly until first focus; removed once.
+ */
+function installAutofillGuards() {
+  var personalFields = [
+    els.fullName,
+    els.role,
+    els.email,
+    els.qualifications,
+    els.phone,
+    els.location,
+  ];
+
+  personalFields.forEach(function (field) {
+    if (!field) return;
+    field.setAttribute("readonly", "readonly");
+    field.addEventListener(
+      "focus",
+      function () {
+        field.removeAttribute("readonly");
+      },
+      { once: true }
+    );
+  });
+}
+
+/**
+ * One-time correction after browsers that autofill after scripts run.
+ * Stops as soon as the user interacts with the form.
+ */
+function scheduleAutofillCorrection() {
+  if (autofillGuardDone) return;
+  window.setTimeout(function () {
+    if (userHasInteracted) {
+      autofillGuardDone = true;
+      return;
+    }
+    applyDefaultState();
+    renderPreview();
+    autofillGuardDone = true;
+  }, 50);
+}
+
 function bindEvents() {
-  els.form.addEventListener("input", renderPreview);
-  els.form.addEventListener("change", renderPreview);
+  els.form.addEventListener("input", function () {
+    markUserInteraction();
+    renderPreview();
+  });
+  els.form.addEventListener("change", function () {
+    markUserInteraction();
+    renderPreview();
+  });
 
   els.btnCopy.addEventListener("click", function () {
+    markUserInteraction();
     copySignature();
   });
   els.btnCopyHtml.addEventListener("click", function () {
+    markUserInteraction();
     copyHtmlSource();
   });
   els.btnExportPng.addEventListener("click", function () {
+    markUserInteraction();
     exportPng();
   });
   els.btnExportPdf.addEventListener("click", function () {
+    markUserInteraction();
     exportPdf();
   });
   els.btnReset.addEventListener("click", function () {
@@ -641,8 +759,18 @@ function bindEvents() {
 }
 
 function init() {
+  if (!resolveElements()) return;
+
+  // No localStorage / sessionStorage / query-param restore by design.
+  applyDefaultState();
+  installAutofillGuards();
   bindEvents();
   renderPreview();
+  scheduleAutofillCorrection();
 }
 
-init();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}

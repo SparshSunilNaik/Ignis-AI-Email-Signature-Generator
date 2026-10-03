@@ -20,17 +20,18 @@
       <section class="panel form-panel" aria-labelledby="form-heading">
         <h2 id="form-heading" class="panel-title">Team member details</h2>
 
-        <form id="signature-form" novalidate>
+        <form id="signature-form" autocomplete="off" novalidate>
           <div class="field">
             <label for="fullName">Full name <span class="req">required</span></label>
             <input
               type="text"
               id="fullName"
-              name="fullName"
+              name="ignis-full-name"
               required
-              autocomplete="name"
+              autocomplete="off"
               placeholder="Full name"
               value=""
+              spellcheck="false"
             />
           </div>
 
@@ -39,11 +40,12 @@
             <input
               type="text"
               id="role"
-              name="role"
+              name="ignis-role"
               required
-              autocomplete="organization-title"
+              autocomplete="off"
               placeholder="AI Engineer"
               value=""
+              spellcheck="false"
             />
           </div>
 
@@ -52,11 +54,12 @@
             <input
               type="email"
               id="email"
-              name="email"
+              name="ignis-email"
               required
-              autocomplete="email"
+              autocomplete="off"
               placeholder="name@ignisai.au"
               value=""
+              spellcheck="false"
             />
           </div>
 
@@ -65,10 +68,11 @@
             <input
               type="text"
               id="qualifications"
-              name="qualifications"
+              name="ignis-qualifications"
               placeholder="MBA, BComm"
               autocomplete="off"
               value=""
+              spellcheck="false"
             />
           </div>
 
@@ -77,10 +81,11 @@
             <input
               type="tel"
               id="phone"
-              name="phone"
-              autocomplete="tel"
+              name="ignis-phone"
+              autocomplete="off"
               placeholder="+61 ..."
               value=""
+              spellcheck="false"
             />
           </div>
 
@@ -89,10 +94,11 @@
             <input
               type="text"
               id="abn"
-              name="abn"
+              name="ignis-abn"
               placeholder="13 131 623 927"
               autocomplete="off"
               value="13 131 623 927"
+              spellcheck="false"
             />
           </div>
 
@@ -101,9 +107,10 @@
             <input
               type="text"
               id="website"
-              name="website"
+              name="ignis-website"
               value="ignisai.au"
-              autocomplete="url"
+              autocomplete="off"
+              spellcheck="false"
             />
           </div>
 
@@ -112,10 +119,11 @@
             <input
               type="text"
               id="location"
-              name="location"
+              name="ignis-location"
               placeholder="Melbourne, Australia"
               autocomplete="off"
               value=""
+              spellcheck="false"
             />
           </div>
 
