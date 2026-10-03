@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ignis Email Signature Generator</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <p class="eyebrow">IGNIS · EMAIL SIGNATURE</p>
+      <h1>Email signature generator</h1>
+      <p class="lede">
+        Create a consistent Ignis signature, copy it into your email client, or export it for reference.
+      </p>
+    </header>
+
+    <div
+      id="logo-host-warning"
+      class="notice notice-warning"
+      role="status"
+      hidden
+    >
+      Preview uses the local logo. Add the hosted Ignis logo URL before using copied signatures in production.
+    </div>
+
+    <div class="workspace">
+      <section class="panel form-panel" aria-labelledby="form-heading">
+        <h2 id="form-heading" class="panel-title">Team member details</h2>
+
+        <form id="signature-form" novalidate>
+          <div class="field">
+            <label for="fullName">Full name <span class="req">required</span></label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              required
+              autocomplete="name"
+              value="Sparsh Sunil Naik"
+            />
+          </div>
+
+          <div class="field">
+            <label for="role">Role / position <span class="req">required</span></label>
+            <input
+              type="text"
+              id="role"
+              name="role"
+              required
+              autocomplete="organization-title"
+              value="AI Engineer"
+            />
+          </div>
+
+          <div class="field">
+            <label for="email">Ignis email <span class="req">required</span></label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email"
+              value="sparsh@ignisai.au"
+            />
+          </div>
+
+          <div class="field">
+            <label for="qualifications">Qualifications</label>
+            <input
+              type="text"
+              id="qualifications"
+              name="qualifications"
+              placeholder="MBA, BComm"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              autocomplete="tel"
+              value="+91 9448863888"
+            />
+          </div>
+
+          <div class="field">
+            <label for="abn">ABN</label>
+            <input
+              type="text"
+              id="abn"
+              name="abn"
+              placeholder="ABN 00 000 000 000"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="website">Website</label>
+            <input
+              type="text"
+              id="website"
+              name="website"
+              value="ignisai.au"
+              autocomplete="url"
+            />
+          </div>
+
+          <div class="field">
+            <label for="location">Company / location</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              placeholder="Melbourne, Australia"
+              autocomplete="off"
+            />
+          </div>
+
+          <fieldset class="field fieldset">
+            <legend>Logo size</legend>
+            <div class="segmented" role="radiogroup" aria-label="Logo size">
+              <label class="segment">
+                <input type="radio" name="logoSize" value="small" />
+                <span>Small</span>
+              </label>
+              <label class="segment">
+                <input type="radio" name="logoSize" value="standard" checked />
+                <span>Standard</span>
+              </label>
+              <label class="segment">
+                <input type="radio" name="logoSize" value="large" />
+                <span>Large</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field fieldset">
+            <legend>Optional lines</legend>
+            <div class="toggles">
+              <label class="toggle">
+                <input type="checkbox" id="showPhone" checked />
+                <span>Show phone</span>
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="showQualifications" checked />
+                <span>Show qualifications</span>
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="showAbn" checked />
+                <span>Show ABN</span>
+              </label>
+              <label class="toggle">
+                <input type="checkbox" id="showLocation" checked />
+                <span>Show location</span>
+              </label>
+            </div>
+          </fieldset>
+        </form>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="preview-heading">
+        <h2 id="preview-heading" class="panel-title">Live preview</h2>
+
+        <div class="preview-stage">
+          <div id="signature-preview" class="signature-preview" aria-live="polite"></div>
+        </div>
+
+        <div class="actions" role="group" aria-label="Signature actions">
+          <button type="button" id="btn-copy" class="btn btn-primary">
+            Copy signature
+          </button>
+          <button type="button" id="btn-copy-html" class="btn btn-secondary">
+            Copy HTML
+          </button>
+          <button type="button" id="btn-export-png" class="btn btn-secondary">
+            Export PNG
+          </button>
+          <button type="button" id="btn-export-pdf" class="btn btn-secondary">
+            Export PDF
+          </button>
+          <button type="button" id="btn-reset" class="btn btn-ghost">
+            Reset
+          </button>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <p>Ignis AI · Internal email signature tool · All data stays in your browser</p>
+    </footer>
+  </div>
+
+  <!-- Off-screen mount used for clipboard Range/Selection fallback -->
+  <div id="copy-mount" class="copy-mount" aria-hidden="true"></div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
